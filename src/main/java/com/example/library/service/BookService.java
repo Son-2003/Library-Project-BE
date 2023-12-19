@@ -2,8 +2,10 @@ package com.example.library.service;
 
 import com.example.library.dao.BookRepository;
 import com.example.library.dao.CheckoutRepository;
+import com.example.library.dao.HistoryRepository;
 import com.example.library.entity.Book;
 import com.example.library.entity.Checkout;
+import com.example.library.entity.History;
 import com.example.library.responsemodels.ShelfCurrentLoansResponse;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -24,9 +26,11 @@ public class BookService {
 
     private CheckoutRepository checkoutRepository;
 
-    public BookService(BookRepository bookRepository, CheckoutRepository checkoutRepository) {
+    private HistoryRepository historyRepository;
+    public BookService(BookRepository bookRepository, CheckoutRepository checkoutRepository, HistoryRepository historyRepository) {
         this.bookRepository = bookRepository;
         this.checkoutRepository = checkoutRepository;
+        this.historyRepository = historyRepository;
     }
 
     public Book checkoutBook (String userEmail, Long bookId) throws  Exception {
@@ -113,6 +117,19 @@ public class BookService {
 
         bookRepository.save(book.get());
         checkoutRepository.deleteById(validateCheckout.getId());
+
+        History history = new History(
+                userEmail,
+                validateCheckout.getCheckoutDate(),
+                LocalDate.now().toString(),
+                book.get().getTitle(),
+                book.get().getAuthor(),
+                book.get().getDescription(),
+                book.get().getImg()
+        );
+
+        historyRepository.save(history);
+
     }
 
     public void renewLoan(String userEmail, Long bookId) throws Exception{
